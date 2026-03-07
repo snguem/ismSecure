@@ -15,7 +15,7 @@ import java.security.SecureRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.Cipher;
-
+import javax.crypto.CipherInputStream;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
@@ -241,25 +241,34 @@ public class CryptoImpl implements ICrypto {
         }
     }
     @Override
-    public void encryptFile(String inputFile, String outputFile, SecretKey key) {
+    public void encryptOrDecryptFile(String inputFile, String outputFile, SecretKey key, int mode) {
+       // on lit sur inputFile, on chiffre puis on ecrit sur outputFile
+       try {
+        FileInputStream fis=new FileInputStream(inputFile);
+        FileOutputStream fos=new FileOutputStream(outputFile);
+        Cipher cipher=Cipher.getInstance("AES/ECB/PKCS5Padding");
+        cipher.init(mode, key);
+        CipherInputStream cis=new CipherInputStream(fis, cipher);
+        byte[] buffer=new byte[1024*1024];
+        int nbrBytesLus = cis.read(buffer);// le nombre de bytes rempli dans buffer
+        while (nbrBytesLus!=-1) {
+            fos.write(buffer, 0, nbrBytesLus);
+            nbrBytesLus = cis.read(buffer);
+        }
+        fos.close();
+        cis.close();
+        fis.close();
+       } catch (Exception e) {
+        e.printStackTrace();
+       }
+    }
+    
+    @Override
+    public void encryptOrDecryptFile(String inputFile, String outputFile, String password,int mode) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'encryptFile'");
     }
-    @Override
-    public void decryptFile(String inputFile, String outputFile, SecretKey key) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'decryptFile'");
-    }
-    @Override
-    public void encryptFile(String inputFile, String outputFile, String password) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'encryptFile'");
-    }
-    @Override
-    public void decryptFile(String inputFile, String outputFile, String password) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'decryptFile'");
-    }
+   
     @Override
     public void hybridEncrypt(String inputFile, String outputFile, PublicKey publicKey) {
         // TODO Auto-generated method stub
